@@ -12,9 +12,13 @@ public interface User
     String getName();
     String getLastIP();
     AtomicBoolean needsSave();
+    String saveToString(boolean redis);
+    String getLastServer();
 
     void setName(String name);
     void flagForSave();
     void setSave(boolean save);
     void setLastIP(String ip);
+    void loadFromString(String string);
+    void setLastServer(String server);
 }

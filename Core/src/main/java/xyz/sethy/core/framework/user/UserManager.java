@@ -22,7 +22,6 @@ public class UserManager implements IUserManager
     {
         this.users = Lists.newArrayList();
         this.jedis = new Jedis();
-        // Will use pipeling.
     }
 
     @Override
@@ -52,22 +51,32 @@ public class UserManager implements IUserManager
     @Override
     public void unloadUser(User user)
     {
-
+        this.users.remove(user);
     }
 
     @Override
-    public void deleteUser(String id)
+    public void deleteUser(User user)
     {
-
+        Pipeline pipeline = jedis.pipelined();
+        pipeline.del("network.users." + user.getUUID().toString());
+        users.remove(user);
     }
 
     @Override
-    public void loadFromRedis(UUID uuid)
+    public User loadFromRedis(UUID uuid)
     {
         Pipeline pipeline = jedis.pipelined();
         for(String key : pipeline.keys("network.users.*").get())
         {
-
+            String id = key.replace("network.users.", "");
+            if(id.equalsIgnoreCase(uuid.toString()))
+            {
+                CoreUser coreUser = new CoreUser(uuid);
+                coreUser.loadFromString(pipeline.get(key).get());
+                this.users.add(coreUser);
+                return coreUser;
+            }
         }
+        return null;
     }
 }
